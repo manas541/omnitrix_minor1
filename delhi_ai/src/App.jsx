@@ -3,7 +3,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Prediction from './pages/Prediction';
-import Analysis from './pages/Analysis';
+//import Analysis from './pages/Analysis';
 import Settings from './pages/Settings';
 
 function App() {
@@ -16,7 +16,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/predict" element={<Prediction />} />
-            <Route path="/analysis" element={<Analysis />} />
+            {/* <Route path="/analysis" element={<Analysis />} /> */}
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>

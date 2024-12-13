@@ -3,7 +3,7 @@ import { Card, Title, Button, Select, SelectItem, TextInput } from '@tremor/reac
 function Settings() {
   return (
     <div className="space-y-6">
-      <Card>
+      {/* <Card>
         <Title>Model Configuration</Title>
         <div className="mt-6 space-y-4">
           <div>
@@ -35,7 +35,7 @@ function Settings() {
             Save Changes
           </Button>
         </div>
-      </Card>
+      </Card> */}
 
       <Card>
         <Title>Notification Settings</Title>

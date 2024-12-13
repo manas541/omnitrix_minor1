@@ -17,7 +17,11 @@ label_encoder = joblib.load("label_encoder.pkl")
 trained_feature_names = model.feature_names_in_
 numerical_features = ["Temperature (°C)", "Humidity (%)", "Wind Speed (km/h)", "Rain (mm)"]
 
-@app.route('/predict', methods=['POST'])
+# Load the dataset
+data_file = "Dataset.csv"
+df = pd.read_csv(data_file)
+
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -49,6 +53,47 @@ def predict():
 
     except Exception as e:
         return jsonify({"error": str(e)})
+
+
+# @app.route('/dataset', methods=['GET'])
+# def get_dataset():
+#     """
+#     Serve the dataset as JSON.
+#     """
+#     try:
+#         # Convert the dataset to a dictionary format for JSON
+#         data = dataset.to_dict(orient="records")
+#         return jsonify(data)
+#     except Exception as e:
+#         return jsonify({"error": str(e)})
+    
+# Endpoint to fetch filtered data
+@app.route('/api/load-data', methods=['GET'])
+def get_load_data():
+    try:
+        # Get the filter type from the query parameters (default to 'year')
+        filter_type = request.args.get('filter', 'year').lower()
+
+        if filter_type == 'year':
+            # Return the entire dataset for the year
+            filtered_data = df[['Date', 'Historical Demand (MW)']].rename(columns={'Date': 'date', 'Historical Demand (MW)': 'load'})
+        elif filter_type == 'month':
+            # Filter data for the current month (e.g., January)
+            month = request.args.get('month', '01')  # Default to January
+            filtered_data = df[df['Date'].str.startswith(f'2024-{month}')][['Date', 'Historical Demand (MW)']].rename(columns={'Date': 'date', 'Historical Demand (MW)': 'load'})
+        elif filter_type == 'week':
+            # Filter data for a specific week (e.g., first 7 days)
+            start_date = pd.to_datetime(request.args.get('start_date', '2024-01-01'))  # Default to first week of January
+            end_date = start_date + pd.Timedelta(days=6)
+            filtered_data = df[(pd.to_datetime(df['Date']) >= start_date) & (pd.to_datetime(df['Date']) <= end_date)][['Date', 'Historical Demand (MW)']].rename(columns={'Date': 'date', 'Historical Demand (MW)': 'load'})
+        else:
+            return jsonify({"error": "Invalid filter type"}), 400
+
+        # Convert to dictionary
+        result = filtered_data.to_dict(orient='records')
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # Run the Flask app

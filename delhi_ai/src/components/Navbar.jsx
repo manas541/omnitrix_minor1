@@ -13,7 +13,7 @@ function Navbar() {
     { path: '/', icon: <FaHome />, label: 'Home' },
     { path: '/dashboard', icon: <FaChartBar />, label: 'Dashboard' },
     { path: '/predict', icon: <FaBrain />, label: 'Prediction' },
-    { path: '/analysis', icon: <FaChartLine />, label: 'Analysis' },
+    // { path: '/analysis', icon: <FaChartLine />, label: 'Analysis' },
     { path: '/settings', icon: <FaCog />, label: 'Settings' },
   ];
 
