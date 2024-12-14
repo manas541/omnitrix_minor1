@@ -1,40 +1,40 @@
-import { useState } from 'react';
-import { Card, Title, Button, Select, SelectItem } from '@tremor/react';
-import axios from 'axios';
+import { useState } from "react";
+import { Card, Title, Button, Select, SelectItem } from "@tremor/react";
+import axios from "axios";
 
 function Prediction() {
-  const [temperature, setTemperature] = useState({ min: '', max: '' });
-  const [humidity, setHumidity] = useState('');
-  const [windSpeed, setWindSpeed] = useState('');
+  const [temperature, setTemperature] = useState({ min: "", max: "" });
+  const [humidity, setHumidity] = useState("");
+  const [windSpeed, setWindSpeed] = useState("");
   const [publicHoliday, setPublicHoliday] = useState(false);
-  const [seasonalFactor, setSeasonalFactor] = useState('Summer');
-  const [dayOfWeek, setDayOfWeek] = useState('Monday');
+  const [seasonalFactor, setSeasonalFactor] = useState("Summer");
+  const [dayOfWeek, setDayOfWeek] = useState("Monday");
   const [predictionResult, setPredictionResult] = useState(null);
   const [error, setError] = useState(null);
 
   const handlePrediction = async () => {
-    // Validate inputs (you can add more detailed validation)
+    // Validate inputs
     if (!temperature.min || !temperature.max || !humidity || !windSpeed) {
-      setError('All fields are required.');
+      setError("All fields are required.");
       return;
     }
 
     const inputData = {
-      "Temperature (°C)": parseFloat(temperature.max), // Using max for simplicity
+      "Temperature (°C)": parseFloat(temperature.max),
       "Humidity (%)": parseFloat(humidity),
       "Wind Speed (km/h)": parseFloat(windSpeed),
-      "Rain (mm)": 0.0, // Placeholder; can be added as a field
+      "Rain (mm)": 0.0,
       "Public Holiday": publicHoliday ? "Yes" : "No",
       "Seasonal Factor": seasonalFactor,
       "Day of Week": dayOfWeek,
     };
 
     try {
-      const response = await axios.post('http://127.0.0.1:5000/predict', inputData);
+      const response = await axios.post("http://127.0.0.1:5000/predict", inputData);
       setPredictionResult(response.data.prediction);
       setError(null);
     } catch (err) {
-      setError('Failed to fetch prediction. Please try again.');
+      setError("Failed to fetch prediction. Please try again.");
       console.error(err);
     }
   };
@@ -47,21 +47,43 @@ function Prediction() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Seasonal Factor</label>
-              <Select className="mt-1" value={seasonalFactor} onValueChange={setSeasonalFactor}>
-                <SelectItem value="Summer">Summer</SelectItem>
-                <SelectItem value="Winter">Winter</SelectItem>
-                <SelectItem value="Spring">Spring</SelectItem>
-                <SelectItem value="Autumn">Autumn</SelectItem>
+              <Select
+                className="mt-1 bg-white rounded shadow"
+                value={seasonalFactor}
+                onValueChange={setSeasonalFactor}
+              >
+                <SelectItem className="bg-white hover:bg-gray-100" value="Summer">
+                  Summer
+                </SelectItem>
+                <SelectItem className="bg-white hover:bg-gray-100" value="Winter">
+                  Winter
+                </SelectItem>
+                <SelectItem className="bg-white hover:bg-gray-100" value="Spring">
+                  Spring
+                </SelectItem>
+                <SelectItem className="bg-white hover:bg-gray-100" value="Autumn">
+                  Autumn
+                </SelectItem>
               </Select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Day of Week</label>
-              <Select className="mt-1" value={dayOfWeek} onValueChange={setDayOfWeek}>
-                {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => (
-                  <SelectItem key={day} value={day}>
-                    {day}
-                  </SelectItem>
-                ))}
+              <Select
+                className="mt-1 bg-white rounded shadow"
+                value={dayOfWeek}
+                onValueChange={setDayOfWeek}
+              >
+                {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(
+                  (day) => (
+                    <SelectItem
+                      className="bg-white hover:bg-gray-100"
+                      key={day}
+                      value={day}
+                    >
+                      {day}
+                    </SelectItem>
+                  )
+                )}
               </Select>
             </div>
           </div>
@@ -144,4 +166,3 @@ function Prediction() {
 }
 
 export default Prediction;
-  

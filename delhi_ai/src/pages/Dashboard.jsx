@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, Title, AreaChart, DonutChart, Select, SelectItem } from '@tremor/react';
+import { Card, Title, AreaChart, BarChart, DonutChart, Select, SelectItem } from '@tremor/react';
 import { motion } from 'framer-motion';
 import { FaBolt, FaSun } from 'react-icons/fa';
 import Papa from 'papaparse';
@@ -7,11 +7,12 @@ import Papa from 'papaparse';
 const Dashboard = () => {
   const [chartData, setChartData] = useState([]);
   const [distributionData, setDistributionData] = useState([]);
-  const [timeRange, setTimeRange] = useState('week'); // Default to week view
+  const [timeRange, setTimeRange] = useState('week');
   const [filteredChartData, setFilteredChartData] = useState([]);
+  const [monthlyAvgData, setMonthlyAvgData] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(null);
 
   useEffect(() => {
-    // Fetch and parse the CSV file
     fetch('/src/data/Dataset.csv')
       .then((response) => response.text())
       .then((csvText) => {
@@ -21,16 +22,16 @@ const Dashboard = () => {
           complete: (results) => {
             const parsedData = results.data;
 
-            // Prepare AreaChart data with date and hour
             const areaData = parsedData.map((row) => ({
-              fullDate: new Date(`${row[0]} ${row[1]}:00`), // Combine date and hour
+              fullDate: new Date(`${row[0]} ${row[1]}:00`),
               date: `${row[0]} ${row[1]}:00`,
               load: parseFloat(row[10] || 0),
             }));
             setChartData(areaData);
-
-            // Initially filter for the last week
             filterDataByTimeRange(areaData, 'week');
+
+            const monthlyData = calculateMonthlyAverages(areaData);
+            setMonthlyAvgData(monthlyData);
 
             setDistributionData([
               { sector: 'Domestic', value: 65 },
@@ -43,8 +44,39 @@ const Dashboard = () => {
       .catch((error) => console.error('Error loading CSV:', error));
   }, []);
 
+  const calculateMonthlyAverages = (data) => {
+    const groupedByMonth = {};
+
+    data.forEach((item) => {
+      const month = item.fullDate.toISOString().slice(0, 7); // YYYY-MM
+      if (!groupedByMonth[month]) groupedByMonth[month] = [];
+      groupedByMonth[month].push(item.load);
+    });
+
+    return Object.keys(groupedByMonth).map((month) => ({
+      month,
+      avgLoad: groupedByMonth[month].reduce((sum, val) => sum + val, 0) / groupedByMonth[month].length,
+    }));
+  };
+
+  const calculateWeeklyAverages = (data, month) => {
+    const filteredData = data.filter((item) => item.fullDate.toISOString().startsWith(month));
+    const groupedByWeek = {};
+
+    filteredData.forEach((item) => {
+      const weekNumber = Math.ceil(item.fullDate.getDate() / 7);
+      if (!groupedByWeek[weekNumber]) groupedByWeek[weekNumber] = [];
+      groupedByWeek[weekNumber].push(item.load);
+    });
+
+    return Object.keys(groupedByWeek).map((week) => ({
+      week: `Week ${week}`,
+      avgLoad: groupedByWeek[week].reduce((sum, val) => sum + val, 0) / groupedByWeek[week].length,
+    }));
+  };
+
   const filterDataByTimeRange = (data, range) => {
-    if (!data || data.length === 0) return; // Guard clause
+    if (!data || data.length === 0) return;
 
     const now = new Date(Math.max(...data.map((item) => item.fullDate)));
     let startDate;
@@ -85,7 +117,7 @@ const Dashboard = () => {
               whileHover={{ scale: 1.02 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Card decoration="top" decorationColor={metric.color} >
+              <Card decoration="top" decorationColor={metric.color} className="hover:shadow-lg transition-shadow">
                 <div className="flex items-center gap-4">
                   <div className={`p-3 rounded-full bg-${metric.color}-50`}>
                     {metric.icon}
@@ -104,7 +136,7 @@ const Dashboard = () => {
       </div>
 
       <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50">
+        <Card>
           <div className="flex justify-between items-center mb-4">
             <Title>Load Profile</Title>
             <Select
@@ -122,7 +154,7 @@ const Dashboard = () => {
             data={filteredChartData}
             index="date"
             categories={["load"]}
-            colors={["black"]}
+            colors={["#34D399"]} // Green palette
             valueFormatter={(value) => `${value.toLocaleString()} MW`}
             showAnimation={true}
           />
@@ -131,16 +163,55 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }}>
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50">
-            <Title>Load Distribution</Title>
-            <DonutChart
+          <Card>
+            <Title>Monthly Load Averages</Title>
+            <BarChart
               className="h-52 mt-4"
-              data={distributionData}
-              category="value"
-              index="sector"
-              colors={["blue", "red", "indigo"]}
+              data={monthlyAvgData}
+              index="month"
+              categories={["avgLoad"]}
+              colors={["#F59E0B"]} // Amber palette
+              valueFormatter={(value) => `${value.toFixed(2)} MW`}
               showAnimation={true}
+              onBarClick={(month) => setSelectedMonth(month)}
             />
+          </Card>
+        </motion.div>
+
+        {selectedMonth && (
+          <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }}>
+            <Card>
+              <Title>Weekly Averages for {selectedMonth}</Title>
+              <BarChart
+                className="h-52 mt-4"
+                data={calculateWeeklyAverages(chartData, selectedMonth)}
+                index="week"
+                categories={["avgLoad"]}
+                colors={["#3B82F6"]} // Blue palette
+                valueFormatter={(value) => `${value.toFixed(2)} MW`}
+                showAnimation={true}
+              />
+            </Card>
+          </motion.div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }}>
+          <Card>
+            <Title>Load Distribution</Title>
+            {distributionData.length > 0 ? (
+              <DonutChart
+                className="h-52 mt-4"
+                data={distributionData}
+                category="value"
+                index="sector"
+                colors={["#34D399", "#F43F5E", "#3B82F6"]} // Green, Pink, and Blue palette
+                showAnimation={true}
+              />
+            ) : (
+              <p className="text-center text-gray-500">No data available for Load Distribution.</p>
+            )}
           </Card>
         </motion.div>
       </div>

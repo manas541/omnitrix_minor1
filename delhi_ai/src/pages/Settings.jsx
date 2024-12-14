@@ -1,42 +1,22 @@
 import { Card, Title, Button, Select, SelectItem, TextInput } from '@tremor/react';
+import { useState } from 'react';
 
 function Settings() {
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [message, setMessage] = useState('');
+
+  const handleUpdateNotifications = () => {
+    if (!email.trim() || !phone.trim()) {
+      setMessage('Required fields are empty');
+    } else {
+      setMessage('Message has been sent');
+      setTimeout(() => setMessage(''), 3000); // Clear message after 3 seconds
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* <Card>
-        <Title>Model Configuration</Title>
-        <div className="mt-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Update Frequency</label>
-            <Select className="mt-1">
-              <SelectItem value="5min">Every 5 minutes</SelectItem>
-              <SelectItem value="15min">Every 15 minutes</SelectItem>
-              <SelectItem value="30min">Every 30 minutes</SelectItem>
-              <SelectItem value="1hour">Hourly</SelectItem>
-            </Select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Data Retention Period</label>
-            <Select className="mt-1">
-              <SelectItem value="1month">1 Month</SelectItem>
-              <SelectItem value="3months">3 Months</SelectItem>
-              <SelectItem value="6months">6 Months</SelectItem>
-              <SelectItem value="1year">1 Year</SelectItem>
-            </Select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">API Key</label>
-            <TextInput type="password" placeholder="Enter API Key" className="mt-1" />
-          </div>
-
-          <Button size="lg" color="blue">
-            Save Changes
-          </Button>
-        </div>
-      </Card> */}
-
       <Card>
         <Title>Notification Settings</Title>
         <div className="mt-6 space-y-4">
@@ -57,17 +37,35 @@ function Settings() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Email Address</label>
-            <TextInput type="email" placeholder="Enter email address" className="mt-1" />
+            <TextInput
+              type="email"
+              placeholder="Enter email address"
+              className="mt-1"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-            <TextInput type="tel" placeholder="Enter phone number" className="mt-1" />
+            <TextInput
+              type="tel"
+              placeholder="Enter phone number"
+              className="mt-1"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
           </div>
 
-          <Button size="lg" color="blue">
+          <Button size="lg" color="blue" onClick={handleUpdateNotifications}>
             Update Notifications
           </Button>
+
+          {message && (
+            <div className={`mt-4 font-semibold ${message === 'Required fields are empty' ? 'text-red-600' : 'text-green-600'}`}>
+              {message}
+            </div>
+          )}
         </div>
       </Card>
     </div>
